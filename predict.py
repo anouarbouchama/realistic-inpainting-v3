@@ -41,7 +41,7 @@ class Predictor(BasePredictor):
         num_inference_steps : int = Input(description=" num_inference_steps", ge=0, le=100, default=20),
         guidance_scale : float = Input(description="Guidance scale (3.5 - 7)", default=5),
        seed : int = Input(description="Seed (0 = random, maximum: 2147483647)", default=0),
-    ) :
+    ) -> List[Path]:
         """Run a single prediction on the model"""
         if seed is None:
             seed = int.from_bytes(os.urandom(2), "big")
@@ -103,7 +103,7 @@ class Predictor(BasePredictor):
         for i, sample in enumerate(samples):
             output_path = f"/content/out-{i}.png"
             sample.save(output_path)
-            output_paths.append(output_path)
+            output_paths.append(Path(output_path))
 
         return output_paths
 
