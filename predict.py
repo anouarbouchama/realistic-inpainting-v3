@@ -37,10 +37,10 @@ class Predictor(BasePredictor):
             description="If this is true, then black pixels are inpainted and white pixels are preserved.",
             default=False,
         ),
-        num_outputs :  int = Input(description=" num_inference_steps", ge=1, le=4 default=1),
+        num_outputs :  int = Input(description=" num_inference_steps", ge=1, le=4, default=1),
         num_inference_steps : int = Input(description=" num_inference_steps", ge=0, le=100, default=20),
-        guidance_scale float = Input(description="Guidance scale (3.5 - 7)", default=5),
-       seed int = Input(description="Seed (0 = random, maximum: 2147483647)", default=0),
+        guidance_scale : float = Input(description="Guidance scale (3.5 - 7)", default=5),
+       seed : int = Input(description="Seed (0 = random, maximum: 2147483647)", default=0),
     ) :
         """Run a single prediction on the model"""
         if seed is None:
