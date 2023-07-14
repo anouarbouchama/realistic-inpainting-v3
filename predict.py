@@ -7,7 +7,7 @@ from diffusers import StableDiffusionInpaintPipeline
 from PIL import Image
 import PIL.ImageOps
 
-
+MODEL_NAME = "yerang/Realistic_Vision_V4.0-inpainting"
 MODEL_CACHE = "diffusers-cache"
 
 
