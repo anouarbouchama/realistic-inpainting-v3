@@ -10,7 +10,6 @@ build:
     - "safetensors==0.3.1"
     - "transformers==4.30.2"
     - "accelerate==0.20.3"
-    - "torch==1.13.0"
     - "torchvision==0.14.0"
     - "omegaconf==2.3.0"
 predict: "predict.py:Predictor"
