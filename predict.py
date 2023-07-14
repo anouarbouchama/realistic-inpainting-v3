@@ -1,13 +1,13 @@
 import os
 from typing import List
-from cog import BasePredictor, Input, Path
 
 import torch
 from diffusers import StableDiffusionInpaintPipeline
 from PIL import Image
 import PIL.ImageOps
+from cog import BasePredictor, Input, Path
 
-MODEL_NAME = "yerang/Realistic_Vision_V4.0-inpainting"
+
 MODEL_CACHE = "diffusers-cache"
 
 
@@ -17,30 +17,46 @@ class Predictor(BasePredictor):
         print("Loading pipeline...")
 
         self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
-            "yerang/Realistic_Vision_V4.0-inpainting",
+            "runwayml/stable-diffusion-inpainting",
             cache_dir=MODEL_CACHE,
+            local_files_only=True,
+            revision="fp16",
+            torch_dtype=torch.float16,
         ).to("cuda")
 
     @torch.inference_mode()
     @torch.cuda.amp.autocast()
     def predict(
         self,
-        prompt: str = "RAW photo, a portrait photo of a latina woman in casual clothes, natural skin, 8k uhd, high quality, film grain, Fujifilm XT3",
-        negative_prompt: str = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
-        image: Path = Input(
-            description="Input image to in-paint. Width and height should both be divisible by 8. If they're not, the image will be center cropped to the nearest width and height divisible by 8",
-        ),
-        mask: Path = Input(
-            description="Black and white image to use as mask. White pixels are inpainted and black pixels are preserved.",
-        ),
+        prompt: str = Input(description="Input prompt", default=""),
+        negative_prompt: str = Input(description="The prompt or prompts not to guide the image generation. Ignored when not using guidance (i.e., ignored if `guidance_scale` is less than `1`).", default=""),
+        image = 'ai.png',
+        mask = 'ai_mask.png'
+        # image: Path = Input(
+        #     description="Input image to in-paint. Width and height should both be divisible by 8. If they're not, the image will be center cropped to the nearest width and height divisible by 8",
+        # ),
+        # mask: Path = Input(
+        #     description="Black and white image to use as mask. White pixels are inpainted and black pixels are preserved.",
+        # ),
         invert_mask: bool = Input(
             description="If this is true, then black pixels are inpainted and white pixels are preserved.",
             default=False,
         ),
-        num_outputs :  int = Input(description=" num_inference_steps", ge=1, le=4, default=1),
-        num_inference_steps : int = Input(description=" num_inference_steps", ge=0, le=100, default=20),
-        guidance_scale : float = Input(description="Guidance scale (3.5 - 7)", default=5),
-       seed : int = Input(description="Seed (0 = random, maximum: 2147483647)", default=0),
+        num_outputs: int = Input(
+            description="Number of images to output. NSFW filter in enabled, so you may get fewer outputs than requested if flagged",
+            ge=1,
+            le=4,
+            default=1,
+        ),
+        num_inference_steps: int = Input(
+            description="Number of denoising steps", ge=1, le=500, default=50
+        ),
+        guidance_scale: float = Input(
+            description="Scale for classifier-free guidance", ge=1, le=20, default=7.5
+        ),
+        seed: int = Input(
+            description="Random seed. Leave blank to randomize the seed", default=None
+        ),
     ) -> List[Path]:
         """Run a single prediction on the model"""
         if seed is None:
@@ -77,18 +93,12 @@ class Predictor(BasePredictor):
             generator=generator,
             num_inference_steps=num_inference_steps,
         )
-        samples = []
-        if output.nsfw_content_detected is not None:
-            for i, nsfw_flag in enumerate(output.nsfw_content_detected):
-                if not nsfw_flag:
-                    samples.append(output.images[i])
-        else:
-            samples = output.images
-        # samples = [
-        #     output.images[i]
-        #     for i, nsfw_flag in enumerate(output.nsfw_content_detected)
-        #     if not nsfw_flag
-        # ]
+
+        samples = [
+            output.images[i]
+            for i, nsfw_flag in enumerate(output.nsfw_content_detected)
+            if not nsfw_flag
+        ]
 
         if len(samples) == 0:
             raise Exception(
@@ -101,7 +111,7 @@ class Predictor(BasePredictor):
             )
         output_paths = []
         for i, sample in enumerate(samples):
-            output_path = f"/content/out-{i}.png"
+            output_path = f"/tmp/out-{i}.png"
             sample.save(output_path)
             output_paths.append(Path(output_path))
 
