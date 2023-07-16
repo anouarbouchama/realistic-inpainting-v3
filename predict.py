@@ -89,11 +89,15 @@ class Predictor(BasePredictor):
             num_inference_steps=num_inference_steps,
         )
 
-        samples = [
+        samples = []
             output.images[i]
+        if output.nsfw_content_detected is not None:
             for i, nsfw_flag in enumerate(output.nsfw_content_detected)
-            if not nsfw_flag
-        ]
+            for i, nsfw_flag in enumerate(output.nsfw_content_detected):
+                if not nsfw_flag:
+                    samples.append(output.images[i])
+        else:
+            samples = output.images
 
         if len(samples) == 0:
             raise Exception(
