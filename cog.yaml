@@ -8,7 +8,7 @@ build:
     - "accelerate==0.20.3"
 #    - "numpy==1.19.4"
     - "accelerate==0.20.3"
-    - "ttorch==1.13.0"
+    - "torch==1.13.0"
     - "torchvision==0.14.0"
     - "omegaconf==2.3.0"
 
