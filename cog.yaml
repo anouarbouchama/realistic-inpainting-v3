@@ -6,7 +6,7 @@ build:
     - "diffusers==0.17.1"
     - "transformers==4.30.2"
     - "accelerate==0.20.3"
-    - "numpy==1.19.4"
+#    - "numpy==1.19.4"
     - "accelerate==0.20.3"
     - "ttorch==1.13.0"
     - "torchvision==0.14.0"
