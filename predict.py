@@ -91,10 +91,9 @@ class Predictor(BasePredictor):
 
         samples = []
         if output.nsfw_content_detected is not None:
-            for i, nsfw_flag in enumerate(output.nsfw_content_detected)
-                for i, nsfw_flag in enumerate(output.nsfw_content_detected):
-                    if not nsfw_flag:
-                        samples.append(output.images[i])
+            for i, nsfw_flag in enumerate(output.nsfw_content_detected):
+                if not nsfw_flag:
+                    samples.append(output.images[i])
         else:
             samples = output.images
 
