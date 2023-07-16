@@ -19,9 +19,6 @@ class Predictor(BasePredictor):
         self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
             "yerang/Realistic_Vision_V4.0-inpainting",
             cache_dir=MODEL_CACHE,
-            local_files_only=True,
-            revision="fp16",
-            torch_dtype=torch.float16,
         ).to("cuda")
 
     @torch.inference_mode()
