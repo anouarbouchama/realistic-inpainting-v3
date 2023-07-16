@@ -17,7 +17,7 @@ class Predictor(BasePredictor):
         print("Loading pipeline...")
 
         self.pipe = StableDiffusionInpaintPipeline.from_pretrained(
-            "runwayml/stable-diffusion-inpainting",
+            "yerang/Realistic_Vision_V4.0-inpainting",
             cache_dir=MODEL_CACHE,
             local_files_only=True,
             revision="fp16",
@@ -30,14 +30,12 @@ class Predictor(BasePredictor):
         self,
         prompt: str = Input(description="Input prompt", default=""),
         negative_prompt: str = Input(description="The prompt or prompts not to guide the image generation. Ignored when not using guidance (i.e., ignored if `guidance_scale` is less than `1`).", default=""),
-        image = 'ai.png',
-        mask = 'ai_mask.png'
-        # image: Path = Input(
-        #     description="Input image to in-paint. Width and height should both be divisible by 8. If they're not, the image will be center cropped to the nearest width and height divisible by 8",
-        # ),
-        # mask: Path = Input(
-        #     description="Black and white image to use as mask. White pixels are inpainted and black pixels are preserved.",
-        # ),
+        image: Path = Input(
+            description="Input image to in-paint. Width and height should both be divisible by 8. If they're not, the image will be center cropped to the nearest width and height divisible by 8",
+        ),
+        mask: Path = Input(
+            description="Black and white image to use as mask. White pixels are inpainted and black pixels are preserved.",
+        ),
         invert_mask: bool = Input(
             description="If this is true, then black pixels are inpainted and white pixels are preserved.",
             default=False,
