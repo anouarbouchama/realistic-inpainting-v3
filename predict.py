@@ -90,7 +90,6 @@ class Predictor(BasePredictor):
         )
 
         samples = []
-            output.images[i]
         if output.nsfw_content_detected is not None:
             for i, nsfw_flag in enumerate(output.nsfw_content_detected)
                 for i, nsfw_flag in enumerate(output.nsfw_content_detected):
