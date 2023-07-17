@@ -1,12 +1,11 @@
 import os
 from typing import List
-
+from cog import BasePredictor, Input, Path
 import torch
 from diffusers import StableDiffusionInpaintPipeline
 from PIL import Image
 import PIL.ImageOps
-from cog import BasePredictor, Input, Path
-
+import torch.cuda as cuda
 
 MODEL_CACHE = "diffusers-cache"
 
@@ -25,8 +24,8 @@ class Predictor(BasePredictor):
     @torch.cuda.amp.autocast()
     def predict(
         self,
-        prompt: str = Input(description="Input prompt", default=""),
-        negative_prompt: str = Input(description="The prompt or prompts not to guide the image generation. Ignored when not using guidance (i.e., ignored if `guidance_scale` is less than `1`).", default=""),
+        prompt: str = "",
+        negative_prompt: str = "(deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
         image: Path = Input(
             description="Input image to in-paint. Width and height should both be divisible by 8. If they're not, the image will be center cropped to the nearest width and height divisible by 8",
         ),
@@ -37,21 +36,10 @@ class Predictor(BasePredictor):
             description="If this is true, then black pixels are inpainted and white pixels are preserved.",
             default=False,
         ),
-        num_outputs: int = Input(
-            description="Number of images to output. NSFW filter in enabled, so you may get fewer outputs than requested if flagged",
-            ge=1,
-            le=4,
-            default=1,
-        ),
-        num_inference_steps: int = Input(
-            description="Number of denoising steps", ge=1, le=500, default=50
-        ),
-        guidance_scale: float = Input(
-            description="Scale for classifier-free guidance", ge=1, le=20, default=7.5
-        ),
-        seed: int = Input(
-            description="Random seed. Leave blank to randomize the seed", default=None
-        ),
+        num_outputs :  int = Input(description=" num_inference_steps", ge=1, le=4, default=1),
+        num_inference_steps : int = Input(description=" num_inference_steps", ge=0, le=100, default=20),
+        guidance_scale : float = Input(description="Guidance scale (3.5 - 7)", default=5),
+       seed : int = Input(description="Seed (0 = random, maximum: 2147483647)", default=0),
     ) -> List[Path]:
         """Run a single prediction on the model"""
         if seed is None:
@@ -71,23 +59,26 @@ class Predictor(BasePredictor):
 
         if mask.size != image.size:
             print(
-                f"WARNING: Mask size ({mask.width}, {mask.height}) is different to image size ({image.width}, {image.height}). Mask will be resized to image size."
+                f"WARNING: Mask size ({mask.width}, {mask.height}) is different from image size ({image.width}, {image.height}). Mask will be resized to image size."
             )
             mask = mask.resize(image.size)
 
         generator = torch.Generator("cuda").manual_seed(seed)
-        output = self.pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            image=image,
-            num_images_per_prompt=num_outputs,
-            mask_image=mask,
-            width=image.width,
-            height=image.height,
-            guidance_scale=guidance_scale,
-            generator=generator,
-            num_inference_steps=num_inference_steps,
-        )
+
+        with torch.cuda.amp.autocast():
+            with torch.no_grad():
+                output = self.pipe(
+                    prompt=prompt,
+                    negative_prompt=negative_prompt,
+                    image=image,
+                    num_images_per_prompt=num_outputs,
+                    mask_image=mask,
+                    width=image.width,
+                    height=image.height,
+                    guidance_scale=guidance_scale,
+                    generator=generator,
+                    num_inference_steps=num_inference_steps,
+                )
 
         samples = []
         if output.nsfw_content_detected is not None:
@@ -99,7 +90,7 @@ class Predictor(BasePredictor):
 
         if len(samples) == 0:
             raise Exception(
-                f"NSFW content detected. Try running it again, or try a different prompt."
+                "NSFW content detected. Try running it again or try a different prompt."
             )
 
         if num_outputs > len(samples):
@@ -113,7 +104,6 @@ class Predictor(BasePredictor):
             output_paths.append(Path(output_path))
 
         return output_paths
-
 
 def crop(image):
     height = (image.height // 8) * 8
