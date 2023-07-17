@@ -36,9 +36,9 @@ class Predictor(BasePredictor):
             description="If this is true, then black pixels are inpainted and white pixels are preserved.",
             default=False,
         ),
-        num_outputs :  int = Input(description=" num_inference_steps", ge=1, le=4, default=1),
-        num_inference_steps : int = Input(description=" num_inference_steps", ge=0, le=100, default=20),
-        guidance_scale : float = Input(description="Guidance scale (3.5 - 7)", default=5),
+        num_outputs :  int = Input(description="Number of images to create (maximum: 5)", ge=1, le=5, default=1),
+        num_inference_steps : int = Input(description=" num_inference_steps (maximum: 100)", ge=0, le=100, default=20),
+        guidance_scale : float = Input(description="Higher guidance scale encourages to generate images that are closely linked to the text prompt (maximum: 20)", default=7.5, le=20),
        seed : int = Input(description="Seed (0 = random, maximum: 2147483647)", default=0),
     ) -> List[Path]:
         """Run a single prediction on the model"""
