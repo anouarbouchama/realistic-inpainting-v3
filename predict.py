@@ -19,6 +19,7 @@ class Predictor(BasePredictor):
             "yerang/Realistic_Vision_V4.0-inpainting",
             cache_dir=MODEL_CACHE,
         ).to("cuda")
+        self.pipe.max_split_size_mb = 2000
 
     @torch.inference_mode()
     @torch.cuda.amp.autocast()
