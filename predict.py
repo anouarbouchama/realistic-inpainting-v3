@@ -43,7 +43,7 @@ class Predictor(BasePredictor):
         seed : int = Input(description="Seed (0 = random, maximum: 2147483647)",default=0),
     ) -> List[Path]:
         """Run a single prediction on the model"""
-        if seed == 0 or seed is None:
+        if seed is None:
             seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
