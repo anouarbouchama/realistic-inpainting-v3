@@ -46,7 +46,10 @@ class Predictor(BasePredictor):
         if seed == '0':
             seed = int.from_bytes(os.urandom(2), "big")
         else:
-            seed =int(seed)
+            ty:
+                seed =int(seed)
+            except:
+                seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
         image = Image.open(image).convert("RGB")
